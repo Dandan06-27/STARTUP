@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketplace</title>
+<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #1877F2;
+    --blue-dark: #166FE5;
+    --blue-light: #E7F3FF;
+    --surface: #F0F2F5;
+    --white: #FFFFFF;
+    --text: #1C1E21;
+    --text-secondary: #65676B;
+    --border: #CED0D4;
+    --border-light: #E4E6EB;
+    --green: #42B72A;
+    --red: #FA3E3E;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.1), 0 0 0 1px rgba(0,0,0,.05);
+    --shadow-md: 0 2px 12px rgba(0,0,0,.12);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,.18);
+    --radius: 8px;
+    --radius-lg: 12px;
+    --sidebar-w: 360px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--surface); color: var(--text); min-height: 100vh; }
+
+  /* TOPBAR */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: 56px; background: var(--white);
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+    display: flex; align-items: center; padding: 0 16px; gap: 8px;
+  }
+  .topbar-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; flex-shrink: 0; }
+  .topbar-logo svg { width: 40px; height: 40px; }
+  .topbar-logo span { font-size: 20px; font-weight: 700; color: var(--blue); }
+  .topbar-search {
+    flex: 1; max-width: 240px;
+    background: var(--surface); border: none; border-radius: 20px;
+    padding: 8px 16px 8px 36px; font-size: 15px; color: var(--text);
+    position: relative;
+  }
+  .search-wrap { position: relative; }
+  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); pointer-events: none; }
+  .topbar-search:focus { outline: none; box-shadow: 0 0 0 2px var(--blue); }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .btn-sell {
+    background: var(--blue-light); color: var(--blue);
+    border: none; border-radius: var(--radius); padding: 8px 16px;
+    font-size: 15px; font-weight: 600; cursor: pointer; transition: background .15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-sell:hover { background: #D8EAFD; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--blue); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px; cursor: pointer; }
+
+  /* LAYOUT */
+  .layout { display: flex; margin-top: 56px; min-height: calc(100vh - 56px); }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: var(--sidebar-w); flex-shrink: 0;
+    background: var(--white); border-right: 1px solid var(--border-light);
+    position: fixed; top: 56px; bottom: 0; left: 0;
+    overflow-y: auto; padding: 16px 8px;
+  }
+  .sidebar h2 { font-size: 20px; font-weight: 700; padding: 8px 8px 4px; }
+  .sidebar-sub { font-size: 13px; color: var(--text-secondary); padding: 0 8px 8px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: var(--radius);
+    cursor: pointer; font-size: 15px; font-weight: 500; transition: background .1s; color: var(--text); text-decoration: none;
+  }
+  .nav-item:hover, .nav-item.active { background: var(--surface); }
+  .nav-item svg { flex-shrink: 0; color: var(--blue); }
+  .nav-divider { border: none; border-top: 1px solid var(--border-light); margin: 8px 0; }
+  .sidebar-section-title { font-size: 17px; font-weight: 700; padding: 8px 12px 4px; }
+
+  /* FILTER PANEL */
+  .filter-section { padding: 8px; }
+  .filter-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+  .filter-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .chip {
+    padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+    font-size: 13px; cursor: pointer; transition: all .15s; background: var(--white); font-weight: 500;
+  }
+  .chip:hover, .chip.active { background: var(--blue); color: white; border-color: var(--blue); }
+  .filter-range { display: flex; gap: 8px; }
+  .filter-input {
+    flex: 1; padding: 8px 10px; border: 1.5px solid var(--border);
+    border-radius: var(--radius); font-size: 14px; background: var(--white);
+  }
+  .filter-input:focus { outline: none; border-color: var(--blue); }
+
+  /* MAIN */
+  .main { margin-left: var(--sidebar-w); flex: 1; padding: 20px 24px; }
+  .main-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .main-header h1 { font-size: 20px; font-weight: 700; }
+  .sort-select {
+    padding: 8px 12px; border: 1.5px solid var(--border); border-radius: var(--radius);
+    font-size: 14px; background: var(--white); cursor: pointer;
+  }
+  .sort-select:focus { outline: none; border-color: var(--blue); }
+
+  /* GRID */
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+  .product-card {
+    background: var(--white); border-radius: var(--radius-lg);
+    overflow: hidden; cursor: pointer; transition: transform .15s, box-shadow .15s;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+  }
+  .product-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .card-img { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--surface); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .card-img img { width: 100%; height: 100%; object-fit: cover; }
+  .card-img .no-img { font-size: 48px; }
+  .card-body { padding: 10px 12px 12px; }
+  .card-price { font-size: 17px; font-weight: 700; color: var(--text); }
+  .card-title { font-size: 14px; color: var(--text); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-loc { font-size: 12px; color: var(--text-secondary); margin-top: 2px; display: flex; align-items: center; gap: 3px; }
+  .card-badge {
+    position: absolute; top: 8px; left: 8px;
+    background: var(--green); color: white; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 10px;
+  }
+  .card-save {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(255,255,255,.9); border: none; border-radius: 50%;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: var(--shadow-sm); transition: background .15s;
+  }
+  .card-save:hover { background: white; }
+  .card-save.saved svg { fill: var(--red); color: var(--red); }
+  .card-own-badge {
+    position: absolute; top: 8px; left: 8px;
+    background: var(--blue); color: white; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 10px;
+  }
+
+  /* MODAL OVERLAY */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.6);
+    z-index: 200; display: flex; align-items: center; justify-content: center;
+    padding: 20px; opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .overlay.open { opacity: 1; pointer-events: all; }
+
+  /* SELL MODAL */
+  .modal {
+    background: var(--white); border-radius: var(--radius-lg);
+    width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto;
+    box-shadow: var(--shadow-lg); transform: translateY(20px); transition: transform .2s;
+  }
+  .overlay.open .modal { transform: translateY(0); }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; border-bottom: 1px solid var(--border-light);
+    position: sticky; top: 0; background: var(--white); z-index: 1;
+  }
+  .modal-header h3 { font-size: 18px; font-weight: 700; }
+  .modal-close {
+    width: 36px; height: 36px; border-radius: 50%; border: none;
+    background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: var(--text-secondary); transition: background .15s;
+  }
+  .modal-close:hover { background: var(--border-light); }
+  .modal-body { padding: 20px; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .form-input, .form-textarea, .form-select {
+    width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
+    border-radius: var(--radius); font-size: 15px; font-family: inherit;
+    transition: border-color .15s; background: var(--white);
+  }
+  .form-input:focus, .form-textarea:focus, .form-select:focus { outline: none; border-color: var(--blue); }
+  .form-textarea { resize: vertical; min-height: 90px; }
+  .form-row { display: flex; gap: 12px; }
+  .form-row .form-group { flex: 1; }
+  .img-upload-area {
+    border: 2px dashed var(--border); border-radius: var(--radius-lg);
+    padding: 32px 16px; text-align: center; cursor: pointer;
+    transition: border-color .15s, background .15s; position: relative;
+  }
+  .img-upload-area:hover { border-color: var(--blue); background: var(--blue-light); }
+  .img-upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .img-preview-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+  .img-preview-item { position: relative; aspect-ratio: 1; border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+  .img-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+  .img-remove {
+    position: absolute; top: 4px; right: 4px; width: 22px; height: 22px;
+    background: rgba(0,0,0,.6); color: white; border: none; border-radius: 50%;
+    cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center;
+  }
+  .btn-primary {
+    width: 100%; padding: 12px; background: var(--blue); color: white;
+    border: none; border-radius: var(--radius); font-size: 16px; font-weight: 600;
+    cursor: pointer; transition: background .15s;
+  }
+  .btn-primary:hover { background: var(--blue-dark); }
+  .btn-primary:disabled { background: var(--border); cursor: not-allowed; }
+
+  /* PRODUCT DETAIL MODAL */
+  .detail-modal {
+    background: var(--white); border-radius: var(--radius-lg);
+    width: 100%; max-width: 880px; max-height: 92vh; overflow: hidden;
+    box-shadow: var(--shadow-lg); display: flex; flex-direction: column;
+    transform: scale(.97); transition: transform .2s;
+  }
+  .overlay.open .detail-modal { transform: scale(1); }
+  .detail-inner { display: flex; overflow: hidden; flex: 1; }
+  .detail-gallery { width: 55%; background: #000; position: relative; flex-shrink: 0; overflow: hidden; }
+  .detail-gallery img { width: 100%; height: 100%; object-fit: contain; }
+  .detail-gallery .no-img { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 80px; background: var(--surface); }
+  .gallery-nav {
+    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 6px;
+  }
+  .gallery-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.5); cursor: pointer; border: none; transition: background .15s; }
+  .gallery-dot.active { background: white; }
+  .gallery-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: rgba(255,255,255,.85); border: none; border-radius: 50%;
+    width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow-sm); font-size: 16px;
+  }
+  .gallery-arrow.prev { left: 10px; }
+  .gallery-arrow.next { right: 10px; }
+  .detail-info { flex: 1; overflow-y: auto; padding: 24px; }
+  .detail-price { font-size: 26px; font-weight: 700; }
+  .detail-title { font-size: 20px; font-weight: 600; margin: 4px 0 8px; }
+  .detail-meta { display: flex; gap: 16px; font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; flex-wrap: wrap; }
+  .detail-meta span { display: flex; align-items: center; gap: 4px; }
+  .detail-divider { border: none; border-top: 1px solid var(--border-light); margin: 16px 0; }
+  .detail-desc-label { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .detail-desc { font-size: 15px; color: var(--text); line-height: 1.5; white-space: pre-wrap; }
+  .detail-seller { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+  .seller-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--blue); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 18px; }
+  .seller-info { flex: 1; }
+  .seller-name { font-weight: 600; font-size: 15px; }
+  .seller-sub { font-size: 13px; color: var(--text-secondary); }
+  .btn-msg { width: 100%; margin-top: 12px; padding: 12px; background: var(--surface); border: none; border-radius: var(--radius); font-size: 15px; font-weight: 600; cursor: pointer; transition: background .15s; }
+  .btn-msg:hover { background: var(--border-light); }
+  .detail-actions { display: flex; gap: 8px; margin-top: 8px; }
+  .btn-save-detail { flex: 1; padding: 10px; background: var(--surface); border: none; border-radius: var(--radius); font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background .15s; }
+  .btn-save-detail:hover { background: var(--border-light); }
+  .btn-save-detail.saved { color: var(--red); }
+
+  .btn-delete-detail {
+    flex: 1;
+    padding: 10px;
+    background: var(--red);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background .15s;
+  }
+
+  .btn-delete-detail:hover {
+    background: #d32f2f;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: #1C1E21; color: white; padding: 12px 20px; border-radius: var(--radius-lg);
+    font-size: 14px; font-weight: 500; z-index: 999; transition: transform .3s; box-shadow: var(--shadow-lg);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* EMPTY */
+  .empty-state { text-align: center; padding: 80px 20px; color: var(--text-secondary); }
+  .empty-state div { font-size: 56px; margin-bottom: 16px; }
+  .empty-state p { font-size: 18px; font-weight: 600; color: var(--text); }
+  .empty-state span { font-size: 14px; }
+
+  /* TABS */
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 16px; background: var(--surface); border-radius: var(--radius); padding: 4px; }
+  .tab-btn { flex: 1; padding: 8px; border: none; border-radius: 6px; background: none; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--text-secondary); transition: all .15s; }
+  .tab-btn.active { background: var(--white); color: var(--text); box-shadow: var(--shadow-sm); }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 12px; }
+    .detail-inner { flex-direction: column; }
+    .detail-gallery { width: 100%; height: 260px; }
+    :root { --sidebar-w: 0px; }
+  }
+
+  /* PROFILE MENU COMPONENT */
+  .profile-menu-wrapper {
+    position: relative;
+  }
+
+  .profile-avatar-trigger {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--blue);
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .profile-avatar-trigger:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(24, 119, 242, 0.3);
+  }
+
+  .profile-avatar-trigger:active {
+    transform: scale(0.98);
+  }
+
+  .profile-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 280px;
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    z-index: 1000;
+    overflow: visible;
+    min-width: 280px;
+  }
+
+  .profile-nickname-row {
+    margin-top: 8px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .profile-nickname-input {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 8px;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  .profile-nickname-save {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    background: var(--blue);
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .profile-nickname-save:hover {
+    background: var(--blue-dark);
+  }
+
+  .profile-dropdown.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .chat-modal {
+    background: var(--white); border-radius: var(--radius-lg);
+    width: 100%; max-width: 460px; max-height: 80vh; overflow-y: auto;
+    box-shadow: var(--shadow-lg); transform: translateY(20px); transition: transform .2s;
+  }
+
+  .overlay.open .chat-modal {
+    transform: translateY(0);
+  }
+
+  .chat-modal .modal-body {
+    padding: 16px;
+  }
+
+  .chat-modal .form-textarea {
+    min-height: 100px;
+    margin-bottom: 12px;
+  }
+
+  /* Profile Header */
+  .profile-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .profile-avatar-large {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--blue);
+    color: white;
+    font-weight: 700;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .profile-header-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .profile-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .profile-email {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Divider */
+  .profile-divider {
+    border: none;
+    border-top: 1px solid var(--border-light);
+    margin: 0;
+  }
+
+  /* Navigation List */
+  .profile-nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .profile-nav-list li {
+    margin: 0;
+    padding: 0;
+  }
+
+  .profile-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.15s ease;
+  }
+
+  .profile-nav-link svg {
+    flex-shrink: 0;
+    color: var(--text-secondary);
+    transition: color 0.15s ease;
+  }
+
+  .profile-nav-link:hover {
+    background-color: var(--surface);
+  }
+
+  .profile-nav-link:hover svg {
+    color: var(--blue);
+  }
+
+  /* Log Out Button */
+  .profile-logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 16px;
+    background: none;
+    border: none;
+    color: var(--red);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.15s ease;
+  }
+
+  .profile-logout-btn svg {
+    flex-shrink: 0;
+    color: var(--red);
+  }
+
+  .profile-logout-btn:hover {
+    background-color: rgba(250, 62, 62, 0.08);
+  }
+
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <a class="topbar-logo" href="#">
+    <img src="logo startup.svg" alt="Logo" style="width: 60px; height: 60px;">
+    <span>MarVis</span>
+  </a>
+  <div class="search-wrap" style="flex:1;max-width:280px;margin-left:8px;">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input class="topbar-search" type="text" placeholder="Search Marketplace" id="searchInput" oninput="filterProducts()">
+  </div>
+  <div class="topbar-right">
+    <button class="btn-sell" onclick="openSellModal()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Create new listing
+    </button>
+    <!-- ProfileMenu Component -->
+    <div class="profile-menu-wrapper">
+      <button 
+        class="profile-avatar-trigger" 
+        id="profileAvatarTrigger"
+        aria-haspopup="true" 
+        aria-expanded="false"
+        onclick="toggleProfileMenu()"
+        title="User menu">
+        Y
+      </button>
+      
+      <div class="profile-dropdown" id="profileDropdown">
+        <!-- Profile Header -->
+        <div class="profile-header">
+          <div 
+            class="profile-avatar-large"
+          >
+            J
+          </div>
+          <div class="profile-header-text">
+            <div class="profile-name">Jane Doe</div>
+            <div class="profile-email">jane.doe@example.com</div>
+            <div class="profile-nickname-row">
+            <label for="nicknameInput" style="font-size:12px; color:var(--text-secondary);">Nickname</label>
+          </div>
+          <div class="profile-nickname-row">
+            <input id="nicknameInput" type="text" placeholder="Enter your display nickname" class="profile-nickname-input" />
+            <button class="profile-nickname-save" onclick="saveNickname()">Save</button>
+          </div>
+          </div>
+        </div>
+
+        <hr class="profile-divider">
+
+        <!-- Navigation Links -->
+        <ul class="profile-nav-list">
+          <li>
+            <a href="#" class="profile-nav-link" onclick="handleNavigation(event, 'My Orders')">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+              <span>My Orders</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="profile-nav-link" onclick="handleNavigation(event, 'Wishlist')">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+              <span>Wishlist</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="profile-nav-link" onclick="handleNavigation(event, 'Account Settings')">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
+              </svg>
+              <span>Account Settings</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="profile-nav-link" onclick="handleNavigation(event, 'Help Center')">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+              </svg>
+              <span>Help Center</span>
+            </a>
+          </li>
+        </ul>
+
+        <hr class="profile-divider">
+
+        <!-- Log Out Button -->
+        <button class="profile-logout-btn" onclick="handleLogout()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+          </svg>
+          <span>Log Out</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h2>Marketplace</h2>
+    <p class="sidebar-sub">Buy and sell items in your community</p>
+
+    <div class="nav-item active" onclick="setTab('browse')">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      Browse all
+    </div>
+    <div class="nav-item" onclick="setTab('saved')">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      Saved items
+    </div>
+    <div class="nav-item" onclick="setTab('mylistings')">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      Your listings
+    </div>
+
+    <hr class="nav-divider">
+    <div class="sidebar-section-title">Filters</div>
+    <div class="filter-section">
+      <div class="filter-label">Category</div>
+      <div class="filter-chips" id="categoryChips">
+        <div class="chip active" onclick="setCategory(this,'All')">All</div>
+        <div class="chip" onclick="setCategory(this,'Electronics')">Electronics</div>
+        <div class="chip" onclick="setCategory(this,'Vehicles')">Vehicles</div>
+        <div class="chip" onclick="setCategory(this,'Furniture')">Furniture</div>
+        <div class="chip" onclick="setCategory(this,'Clothing')">Clothing</div>
+        <div class="chip" onclick="setCategory(this,'Garden')">Garden</div>
+        <div class="chip" onclick="setCategory(this,'Toys')">Toys</div>
+        <div class="chip" onclick="setCategory(this,'Books')">Books</div>
+        <div class="chip" onclick="setCategory(this,'Other')">Other</div>
+      </div>
+      <div class="filter-label">Price range</div>
+      <div class="filter-range">
+        <input class="filter-input" type="number" placeholder="Min ₱" id="priceMin" oninput="filterProducts()">
+        <input class="filter-input" type="number" placeholder="Max ₱" id="priceMax" oninput="filterProducts()">
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="main-header">
+      <h1 id="mainTitle">Today's picks</h1>
+      <select class="sort-select" onchange="sortProducts(this.value)">
+        <option value="newest">Newest first</option>
+        <option value="price_asc">Price: Low to High</option>
+        <option value="price_desc">Price: High to Low</option>
+      </select>
+    </div>
+    <div class="product-grid" id="productGrid"></div>
+    <div id="emptyState" class="empty-state" style="display:none">
+      <div>🛒</div>
+      <p>No listings found</p>
+      <span>Try adjusting your filters or search terms</span>
+    </div>
+  </main>
+</div>
+
+<!-- SELL MODAL -->
+<div class="overlay" id="sellOverlay" onclick="closeSellIfOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Create new listing</h3>
+      <button class="modal-close" onclick="closeSellModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Photos</label>
+        <div class="img-upload-area" id="uploadArea">
+          <input type="file" accept="image/*" multiple onchange="handleImages(event)">
+          <svg width="36" height="36" fill="none" stroke="#1877F2" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 8px;display:block"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+          <div style="font-weight:600;font-size:15px;color:#1877F2">Add photos</div>
+          <div style="font-size:13px;color:#65676B;margin-top:4px">or drag and drop</div>
+        </div>
+        <div class="img-preview-grid" id="imgPreviewGrid"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Title <span style="color:red">*</span></label>
+        <input class="form-input" type="text" id="formTitle" placeholder="What are you selling?" maxlength="100">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Price (₱) <span style="color:red">*</span></label>
+          <input class="form-input" type="number" id="formPrice" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-select" id="formCategory">
+            <option value="Electronics">Electronics</option>
+            <option value="Vehicles">Vehicles</option>
+            <option value="Furniture">Furniture</option>
+            <option value="Clothing">Clothing</option>
+            <option value="Garden">Garden</option>
+            <option value="Toys">Toys</option>
+            <option value="Books">Books</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Condition</label>
+        <select class="form-select" id="formCondition">
+          <option value="New">New</option>
+          <option value="Like new">Like new</option>
+          <option value="Good">Good</option>
+          <option value="Fair">Fair</option>
+          <option value="Poor">Poor</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="formDesc" placeholder="Describe your item, include details like brand, model, or any defects..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Location</label>
+        <input class="form-input" type="text" id="formLocation" placeholder="e.g. Quezon City, Metro Manila">
+      </div>
+      <button class="btn-primary" onclick="submitListing()">Publish listing</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="overlay" id="detailOverlay" onclick="closeDetailIfOutside(event)">
+  <div class="detail-modal">
+    <div class="modal-header">
+      <h3 id="detailModalTitle">Product details</h3>
+      <button class="modal-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="detail-inner">
+      <div class="detail-gallery" id="detailGallery"></div>
+      <div class="detail-info">
+        <div class="detail-price" id="detailPrice"></div>
+        <div class="detail-title" id="detailTitle"></div>
+        <div class="detail-meta" id="detailMeta"></div>
+        <hr class="detail-divider">
+        <div class="detail-desc-label">Description</div>
+        <div class="detail-desc" id="detailDesc"></div>
+        <hr class="detail-divider">
+        <div class="detail-seller" id="detailSeller"></div>
+        <button class="btn-msg" onclick="openChatWithSeller()">
+          💬 Chat with seller
+        </button>
+        <div class="detail-actions">
+          <button class="btn-save-detail" id="detailSaveBtn" onclick="toggleSaveFromDetail()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            Save
+          </button>
+          <div id="deleteButtonContainer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHAT MODAL -->
+<div class="overlay" id="chatOverlay" onclick="closeChatIfOutside(event)">
+  <div class="chat-modal">
+    <div class="modal-header">
+      <h3>Chat with Seller</h3>
+      <button class="modal-close" onclick="closeChat()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="chatInfo" style="font-size:14px;margin-bottom:10px;color:var(--text-secondary);"></div>
+      <textarea id="chatMessage" class="form-textarea" placeholder="Write a message to the seller..."></textarea>
+      <button class="btn-primary" onclick="sendMessageToSeller()">Send Message</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- Supabase JS v2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- supabase.js — client config & auth helpers -->
+<script src="supabase.js"></script>
+
+<script>
+let products = [];
+let nextId = 100;
+let currentImgs = [];
+let uploadPromises = [];
+let currentTab = 'browse';
+let currentCategory = 'All';
+let currentDetail = null;
+let sortMode = 'newest';
+let firstLoad = true;
+
+// Load listings from database
+async function loadListings() {
+  console.log('[debug] loadListings() start, currentTab=', currentTab, 'currentCategory=', currentCategory);
+  try {
+    const listings = await getListings();
+    console.log('[debug] getListings returned', listings?.length, 'entries', listings);
+    products = listings.map(listing => ({
+      id: listing.id,
+      title: listing.title,
+      price: listing.price,
+      category: listing.category,
+      condition: listing.condition,
+      desc: listing.description,
+      location: listing.location,
+      seller: listing.seller_nickname || listing.profiles?.full_name || listing.profiles?.email?.split('@')[0] || 'Unknown',
+      images: listing.images || [],
+      saved: false, // This would need to be stored per user
+      own: false, // Check if current user owns it
+      date: new Date(listing.created_at).getTime(),
+      user_id: listing.user_id
+    }));
+    
+    // Check ownership
+    const session = await getSession();
+    if (session) {
+      products.forEach(p => {
+        p.own = p.user_id === session.user.id;
+      });
+    }
+
+    if (firstLoad) {
+      firstLoad = false;
+      currentCategory = 'All';
+      currentTab = 'browse';
+      document.getElementById('searchInput').value = '';
+      document.getElementById('priceMin').value = '';
+      document.getElementById('priceMax').value = '';
+      document.querySelectorAll('#categoryChips .chip').forEach(c => c.classList.remove('active'));
+      const firstChip = document.querySelector('#categoryChips .chip');
+      if (firstChip) firstChip.classList.add('active');
+      setTab('browse');
+    } else {
+      filterProducts();
+    }
+
+  } catch (error) {
+    console.error('Error loading listings:', error);
+    toast('Failed to load listings');
+  }
+}
+
+async function handleDeleteListing(listingId) {
+  if (!confirm('Are you sure you want to delete this listing?')) return;
+  try {
+    await deleteListing(listingId); // Supabase function
+    toast('🗑️ Listing deleted');
+    closeDetail();
+    await loadListings();
+  } catch (error) {
+    console.error('Error deleting listing:', error);
+    toast('Failed to delete listing');
+  }
+}
+
+function renderGrid(list) {
+  console.log('[debug] renderGrid list.length=', list.length);
+  const grid = document.getElementById('productGrid');
+  const empty = document.getElementById('emptyState');
+  if (!list.length) { grid.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display = 'none';
+  grid.innerHTML = list.map(p => `
+    <div class="product-card" onclick="openDetail('${p.id}')">
+      <div class="card-img">
+        ${p.images.length ? `<img src="${p.images[0]}" alt="${p.title}">` : `<div class="no-img">${p.emoji||'📦'}</div>`}
+      </div>
+      ${p.own ? `<div class="card-own-badge">Your listing</div>` : p.condition === 'New' ? `<div class="card-badge">New</div>` : ''}
+      <button class="card-save ${p.saved?'saved':''}" onclick="toggleSave(event,'${p.id}')" title="${p.saved?'Remove from saved':'Save'}">
+        <svg width="16" height="16" fill="${p.saved?'#FA3E3E':'none'}" stroke="${p.saved?'#FA3E3E':'currentColor'}" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </button>
+      <div class="card-body">
+        <div class="card-price">₱${Number(p.price).toLocaleString()}</div>
+        <div class="card-title">${p.title}</div>
+        <div class="card-loc">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${p.location || 'Metro Manila'}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function getFilteredList() {
+  let list = [...products];
+  if (currentTab === 'saved') list = list.filter(p => p.saved);
+  if (currentTab === 'mylistings') list = list.filter(p => p.own);
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  if (search) list = list.filter(p => p.title.toLowerCase().includes(search) || (p.desc||'').toLowerCase().includes(search));
+  if (currentCategory !== 'All') list = list.filter(p => p.category === currentCategory);
+  const min = parseFloat(document.getElementById('priceMin').value);
+  const max = parseFloat(document.getElementById('priceMax').value);
+  if (!isNaN(min)) list = list.filter(p => p.price >= min);
+  if (!isNaN(max)) list = list.filter(p => p.price <= max);
+  if (sortMode === 'price_asc') list.sort((a,b) => a.price - b.price);
+  else if (sortMode === 'price_desc') list.sort((a,b) => b.price - a.price);
+  else list.sort((a,b) => b.date - a.date);
+  return list;
+}
+
+function filterProducts() { renderGrid(getFilteredList()); }
+function sortProducts(v) { sortMode = v; filterProducts(); }
+function setCategory(el, cat) {
+  currentCategory = cat;
+  document.querySelectorAll('#categoryChips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  filterProducts();
+}
+function setTab(tab) {
+  currentTab = tab;
+  const titles = { browse: "Today's picks", saved: 'Saved items', mylistings: 'Your listings' };
+  document.getElementById('mainTitle').textContent = titles[tab];
+  document.querySelectorAll('.nav-item').forEach((n,i) => n.classList.toggle('active', ['browse','saved','mylistings'][i]===tab));
+  filterProducts();
+}
+
+// SELL
+function openSellModal() { document.getElementById('sellOverlay').classList.add('open'); }
+function closeSellModal() { document.getElementById('sellOverlay').classList.remove('open'); resetForm(); }
+function closeSellIfOutside(e) { if (e.target === document.getElementById('sellOverlay')) closeSellModal(); }
+function resetForm() {
+  ['formTitle','formPrice','formDesc','formLocation'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('formCategory').value = 'Electronics';
+  document.getElementById('formCondition').value = 'New';
+  currentImgs = []; renderImgPreviews();
+}
+
+async function handleImages(e) {
+  const files = Array.from(e.target.files);
+
+  files.forEach((file) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const tempUrl = event.target.result;
+      currentImgs.push(tempUrl);
+      renderImgPreviews();
+
+      const uploadPromise = uploadImage(file)
+        .then((uploadedUrl) => {
+          const index = currentImgs.indexOf(tempUrl);
+          if (index !== -1) currentImgs[index] = uploadedUrl;
+          renderImgPreviews();
+        })
+        .catch((uploadError) => {
+          console.error('Error uploading image:', uploadError);
+          // Silently fail — image preview is still displayed locally
+        });
+
+      uploadPromises.push(uploadPromise);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  e.target.value = '';
+  console.log('Current image list after selecting files:', currentImgs);
+}
+
+function renderImgPreviews() {
+  document.getElementById('imgPreviewGrid').innerHTML = currentImgs.map((src,i) =>
+    `<div class="img-preview-item"><img src="${src}"><button class="img-remove" onclick="removeImg(${i})">✕</button></div>`
+  ).join('');
+}
+
+function removeImg(i) { currentImgs.splice(i,1); renderImgPreviews(); }
+
+async function submitListing() {
+  const title = document.getElementById('formTitle').value.trim();
+  const price = parseFloat(document.getElementById('formPrice').value);
+  if (!title) { toast('Please enter a title'); return; }
+  if (isNaN(price) || price < 0) { toast('Please enter a valid price'); return; }
+
+  const publishBtn = document.querySelector('.btn-primary');
+  publishBtn.disabled = true;
+  publishBtn.textContent = 'Publishing...';
+
+  try {
+    if (uploadPromises.length) {
+      const results = await Promise.all(uploadPromises.map(p => p.catch(err => err)));
+      const uploadErrors = results.filter(r => r instanceof Error);
+      if (uploadErrors.length > 0) {
+        console.warn(`Image upload failed for ${uploadErrors.length} file(s). Listing continues with local previews.`);
+        toast('Some photos failed to upload; listing will still be created with previews.');
+      }
+      uploadPromises = [];
+    }
+
+    const listing = {
+      title,
+      price,
+      category: document.getElementById('formCategory').value,
+      condition: document.getElementById('formCondition').value,
+      description: document.getElementById('formDesc').value.trim(),
+      location: document.getElementById('formLocation').value.trim() || 'Metro Manila',
+      images: currentImgs
+    };
+
+    await createListing(listing);
+
+    // Reset form
+    document.getElementById('formTitle').value = '';
+    document.getElementById('formPrice').value = '';
+    document.getElementById('formDesc').value = '';
+    document.getElementById('formLocation').value = '';
+    currentImgs = [];
+    renderImgPreviews();
+
+    closeSellModal();
+    await loadListings(); // Reload listings
+    setTab('mylistings');
+    toast('🎉 Listing published!');
+  } catch (error) {
+    console.error('Error creating listing:', error);
+    toast('Failed to publish listing: ' + (error?.message || 'Unknown error'));
+  } finally {
+    publishBtn.disabled = false;
+    publishBtn.textContent = 'Publish listing';
+  }
+}
+
+// DETAIL
+function openDetail(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  currentDetail = p;
+  document.getElementById('detailModalTitle').textContent = p.title;
+  document.getElementById('detailPrice').textContent = '₱' + Number(p.price).toLocaleString();
+  document.getElementById('detailTitle').textContent = p.title;
+  document.getElementById('detailMeta').innerHTML = `
+    <span><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>${p.condition}</span>
+    <span><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${p.location}</span>
+    <span>🏷️ ${p.category}</span>
+    <span>🕐 ${timeAgo(p.date)}</span>
+  `;
+  document.getElementById('detailDesc').textContent = p.desc || 'No description provided.';
+  const init = p.seller.charAt(0).toUpperCase();
+  document.getElementById('detailSeller').innerHTML = `
+    <div class="seller-avatar">${init}</div>
+    <div class="seller-info">
+      <div class="seller-name">${p.seller}</div>
+      <div class="seller-sub">Seller · Joined Marketplace</div>
+    </div>
+  `;
+  document.getElementById('chatInfo').textContent = `Your message will go to ${p.seller} (${p.location || 'Location unknown'})`;
+  // gallery
+  const gallery = document.getElementById('detailGallery');
+  if (p.images.length) {
+    let cur = 0;
+    const render = () => {
+      gallery.innerHTML = `
+        <img src="${p.images[cur]}" alt="${p.title}" style="width:100%;height:100%;object-fit:cover;">
+        ${p.images.length > 1 ? `
+          <button class="gallery-arrow prev" onclick="event.stopPropagation();galleryNav(-1)">‹</button>
+          <button class="gallery-arrow next" onclick="event.stopPropagation();galleryNav(1)">›</button>
+          <div class="gallery-nav">${p.images.map((_,i) => `<button class="gallery-dot ${i===cur?'active':''}" onclick="event.stopPropagation();galleryGo(${i})"></button>`).join('')}</div>
+        ` : ''}
+      `;
+    };
+    window.galleryNav = d => { cur = (cur + d + p.images.length) % p.images.length; render(); };
+    window.galleryGo = i => { cur = i; render(); };
+    render();
+  } else {
+    gallery.innerHTML = `<div class="no-img">${p.emoji || '📦'}</div>`;
+  }
+  // save btn
+  updateDetailSaveBtn(p);
+  // add delete btn if owner
+  const deleteContainer = document.getElementById('deleteButtonContainer');
+  if (p.own) {
+    deleteContainer.innerHTML = `<button class="btn-delete-detail" onclick="handleDeleteListing('${p.id}')">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      Delete
+    </button>`;
+  } else {
+    deleteContainer.innerHTML = '';
+  }
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function updateDetailSaveBtn(p) {
+  const btn = document.getElementById('detailSaveBtn');
+  btn.className = 'btn-save-detail' + (p.saved ? ' saved' : '');
+  btn.innerHTML = `<svg width="16" height="16" fill="${p.saved?'#FA3E3E':'none'}" stroke="${p.saved?'#FA3E3E':'currentColor'}" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ${p.saved ? 'Saved' : 'Save'}`;
+}
+
+function closeDetail() { document.getElementById('detailOverlay').classList.remove('open'); currentDetail = null; }
+function closeDetailIfOutside(e) { if (e.target === document.getElementById('detailOverlay')) closeDetail(); }
+
+function openChatWithSeller() {
+  if (!currentDetail) {
+    toast('No product selected');
+    return;
+  }
+  document.getElementById('chatInfo').textContent = `Chat with ${currentDetail.seller} about "${currentDetail.title}"`;
+  document.getElementById('chatMessage').value = '';
+  document.getElementById('chatOverlay').classList.add('open');
+}
+
+function closeChat() {
+  document.getElementById('chatOverlay').classList.remove('open');
+}
+
+function closeChatIfOutside(e) {
+  if (e.target === document.getElementById('chatOverlay')) closeChat();
+}
+
+function sendMessageToSeller() {
+  const message = document.getElementById('chatMessage').value.trim();
+  if (!message) {
+    toast('Please write a message first');
+    return;
+  }
+  // Here you can implement real chat backend integration.
+  toast(`Message sent to ${currentDetail ? currentDetail.seller : 'seller'}`);
+  closeChat();
+}
+
+function toggleSave(e, id) {
+  e.stopPropagation();
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  p.saved = !p.saved;
+  toast(p.saved ? '❤️ Saved to your items' : 'Removed from saved');
+  filterProducts();
+}
+
+function toggleSaveFromDetail() {
+  if (!currentDetail) return;
+  currentDetail.saved = !currentDetail.saved;
+  updateDetailSaveBtn(currentDetail);
+  toast(currentDetail.saved ? '❤️ Saved to your items' : 'Removed from saved');
+  filterProducts();
+}
+
+function timeAgo(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Init
+loadListings();
+
+/* ── PROFILE MENU COMPONENT ── */
+let profileMenuOpen = false;
+
+function toggleProfileMenu() {
+  const dropdown = document.getElementById('profileDropdown');
+  const trigger = document.getElementById('profileAvatarTrigger');
+  profileMenuOpen = !profileMenuOpen;
+  
+  dropdown.classList.toggle('open', profileMenuOpen);
+  trigger.setAttribute('aria-expanded', profileMenuOpen);
+}
+
+function closeProfileMenu() {
+  const dropdown = document.getElementById('profileDropdown');
+  const trigger = document.getElementById('profileAvatarTrigger');
+  profileMenuOpen = false;
+  
+  dropdown.classList.remove('open');
+  trigger.setAttribute('aria-expanded', false);
+}
+
+function handleNavigation(event, section) {
+  event.preventDefault();
+  closeProfileMenu();
+  toast(`📍 Navigating to ${section}...`);
+  // TODO: Implement navigation logic here
+}
+
+function handleLogout() {
+  console.log('Logout triggered');
+  closeProfileMenu();
+  toast('👋 Logging out...');
+  
+  // Mark this as a fresh logout by setting a session flag
+  sessionStorage.setItem('justLoggedOut', 'true');
+  
+  // Sign out the user (fire and forget)
+  try {
+    signOut().catch(err => console.error('Logout error:', err));
+  } catch (err) {
+    console.error('SignOut error:', err);
+  }
+  
+  // Redirect to index.html after 800ms delay
+  setTimeout(() => {
+    console.log('Redirecting to index.html');
+    window.location.href = 'index.html';
+  }, 800);
+}
+
+// Click outside to close profile menu
+document.addEventListener('click', (event) => {
+  const menuWrapper = document.querySelector('.profile-menu-wrapper');
+  if (menuWrapper && !menuWrapper.contains(event.target)) {
+    closeProfileMenu();
+  }
+});
+
+/* ── Update Profile Menu with Actual User Data ── */
+async function updateProfileMenuWithUserData() {
+  const session = await getSession();
+  
+  if (session && session.user) {
+    const email = session.user.email;
+    const fullName = session.user.user_metadata?.full_name || email.split('@')[0];
+    const nickname = session.user.user_metadata?.nickname || fullName;
+    const initial = email.charAt(0).toUpperCase();
+    
+    // Update the profile name, nickname and email in the menu
+    document.querySelector('.profile-name').textContent = nickname;
+    document.querySelector('.profile-email').textContent = email;
+    document.getElementById('nicknameInput').value = nickname;
+    
+    // Update avatars with email initial
+    document.getElementById('profileAvatarTrigger').textContent = initial;
+    document.querySelector('.profile-avatar-large').textContent = initial;
+    
+    console.log('Profile menu updated with user:', { fullName, nickname, email, initial });
+  }
+}
+
+async function saveNickname() {
+  const nickname = document.getElementById('nicknameInput').value.trim();
+  if (!nickname) { toast('Nickname cannot be empty'); return; }
+
+  const confirmMessage =
+    'You are about to set your seller nickname to "' + nickname + '".\n' +
+    'This name will be shown to other users on your listings.\n' +
+    'Proceed with this nickname?';
+  if (!confirm(confirmMessage)) {
+    toast('Nickname update cancelled');
+    return;
+  }
+
+  try {
+    await updateNickname(nickname);
+    toast('Nickname saved');
+    await updateProfileMenuWithUserData();
+    await loadListings(); // refresh seller name on all listings
+  } catch (error) {
+    console.error('Failed to save nickname:', error);
+    toast('Failed to save nickname');
+  }
+}
+
+// Initialize profile menu on page load
+document.addEventListener('DOMContentLoaded', updateProfileMenuWithUserData);
+</script>
+</body>
+</html>
